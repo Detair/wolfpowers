@@ -2,8 +2,11 @@
 
 Use this template when dispatching an implementer subagent.
 
+**Model: sonnet** - Fast, capable code generation. TDD + two-stage review catches quality issues.
+
 ```
 Task tool (general-purpose):
+  model: "sonnet"
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with independent tasks in the current session. Uses model-optimized subagents - Sonnet for implementation, Opus for reviews.
 ---
 
 # Subagent-Driven Development
@@ -8,6 +8,19 @@ description: Use when executing implementation plans with independent tasks in t
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+
+## Model Assignment
+
+Each subagent role uses a specific model optimized for its task:
+
+| Role | Model | Rationale |
+|---|---|---|
+| **Implementer** | `sonnet` | Fast, capable code generation; TDD + reviews catch quality issues |
+| **Spec Compliance Reviewer** | `sonnet` | Focused comparison task; line-by-line requirement matching |
+| **Code Quality Reviewer** | `opus` | Deep reasoning for architecture, subtle bugs, design issues |
+| **Final Code Reviewer** | `opus` | Holistic view across entire implementation |
+
+**When dispatching subagents, always pass the `model` parameter as specified above.**
 
 ## When to Use
 
@@ -43,14 +56,14 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
+        "Dispatch implementer subagent [model: sonnet] (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
+        "Dispatch spec reviewer subagent [model: sonnet] (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Dispatch code quality reviewer subagent [model: opus] (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
@@ -58,35 +71,35 @@ digraph process {
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Dispatch final code reviewer subagent [model: opus] for entire implementation" [shape=box];
+    "Use wolfpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent [model: sonnet] (./implementer-prompt.md)";
+    "Dispatch implementer subagent [model: sonnet] (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Answer questions, provide context" -> "Dispatch implementer subagent [model: sonnet] (./implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
+    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent [model: sonnet] (./spec-reviewer-prompt.md)";
+    "Dispatch spec reviewer subagent [model: sonnet] (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
+    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent [model: sonnet] (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent [model: opus] (./code-quality-reviewer-prompt.md)" [label="yes"];
+    "Dispatch code quality reviewer subagent [model: opus] (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent [model: opus] (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Dispatch implementer subagent [model: sonnet] (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Dispatch final code reviewer subagent [model: opus] for entire implementation" [label="no"];
+    "Dispatch final code reviewer subagent [model: opus] for entire implementation" -> "Use wolfpowers:finishing-a-development-branch";
 }
 ```
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `./implementer-prompt.md` - Dispatch implementer subagent **(model: sonnet)**
+- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent **(model: sonnet)**
+- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent **(model: opus)**
 
 ## Example Workflow
 
@@ -100,66 +113,66 @@ You: I'm using Subagent-Driven Development to execute this plan.
 Task 1: Hook installation script
 
 [Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch implementation subagent with model: sonnet, full task text + context]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
+Implementer (sonnet): "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "User level (~/.config/wolfpowers/hooks/)"
 
-Implementer: "Got it. Implementing now..."
+Implementer (sonnet): "Got it. Implementing now..."
 [Later] Implementer:
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
+[Dispatch spec compliance reviewer with model: sonnet]
+Spec reviewer (sonnet): ✅ Spec compliant - all requirements met, nothing extra
 
-[Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+[Get git SHAs, dispatch code quality reviewer with model: opus]
+Code reviewer (opus): Strengths: Good test coverage, clean. Issues: None. Approved.
 
 [Mark Task 1 complete]
 
 Task 2: Recovery modes
 
 [Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch implementation subagent with model: sonnet, full task text + context]
 
-Implementer: [No questions, proceeds]
-Implementer:
+Implementer (sonnet): [No questions, proceeds]
+Implementer (sonnet):
   - Added verify/repair modes
   - 8/8 tests passing
   - Self-review: All good
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
+[Dispatch spec compliance reviewer with model: sonnet]
+Spec reviewer (sonnet): ❌ Issues:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
 
 [Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
+Implementer (sonnet): Removed --json flag, added progress reporting
 
 [Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
+Spec reviewer (sonnet): ✅ Spec compliant now
 
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
+[Dispatch code quality reviewer with model: opus]
+Code reviewer (opus): Strengths: Solid. Issues (Important): Magic number (100)
 
 [Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
+Implementer (sonnet): Extracted PROGRESS_INTERVAL constant
 
 [Code reviewer reviews again]
-Code reviewer: ✅ Approved
+Code reviewer (opus): ✅ Approved
 
 [Mark Task 2 complete]
 
 ...
 
 [After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+[Dispatch final code-reviewer with model: opus]
+Final reviewer (opus): All requirements met, ready to merge
 
 Done!
 ```
@@ -183,18 +196,17 @@ Done!
 - Subagent gets complete information upfront
 - Questions surfaced before work begins (not after)
 
+**Cost-optimized model usage:**
+- Sonnet for implementation (fast, capable, cheaper)
+- Opus for quality review (deep reasoning where it matters most)
+- Net result: faster iteration with same quality gates
+
 **Quality gates:**
 - Self-review catches issues before handoff
 - Two-stage review: spec compliance, then code quality
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
-
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
@@ -211,6 +223,7 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- **Dispatch a subagent without the specified model parameter**
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -230,13 +243,13 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for reviewer subagents
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **wolfpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **wolfpowers:writing-plans** - Creates the plan this skill executes
+- **wolfpowers:requesting-code-review** - Code review template for reviewer subagents (model-optimized)
+- **wolfpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **wolfpowers:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **wolfpowers:executing-plans** - Use for parallel session instead of same-session execution
