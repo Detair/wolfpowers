@@ -54,8 +54,8 @@ export const WolfpowersPlugin = async ({ client, directory }) => {
 
   // Helper to generate bootstrap content
   const getBootstrapContent = () => {
-    // Try to load using-superpowers skill
-    const skillPath = path.join(wolfpowersSkillsDir, 'using-superpowers', 'SKILL.md');
+    // Try to load using-wolfpowers skill
+    const skillPath = path.join(wolfpowersSkillsDir, 'using-wolfpowers', 'SKILL.md');
     if (!fs.existsSync(skillPath)) return null;
 
     const fullContent = fs.readFileSync(skillPath, 'utf8');

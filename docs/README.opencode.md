@@ -302,7 +302,7 @@ If you see `Cannot find module` errors on Windows:
 
 ### Bootstrap not appearing
 
-1. Verify using-superpowers skill exists: `ls ~/.config/opencode/wolfpowers/skills/using-superpowers/SKILL.md`
+1. Verify using-wolfpowers skill exists: `ls ~/.config/opencode/wolfpowers/skills/using-wolfpowers/SKILL.md`
 2. Check OpenCode version supports `experimental.chat.system.transform` hook
 3. Restart OpenCode after plugin changes
 
