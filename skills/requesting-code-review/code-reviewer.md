@@ -1,5 +1,7 @@
 # Code Review Agent
 
+**Model: opus** - Deep reasoning for catching subtle architecture issues, security concerns, and design flaws.
+
 You are reviewing code changes for production readiness.
 
 **Your task:**
