@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies. Assigns models by task type - Sonnet for fixes/debug, Opus for architecture/analysis.
 ---
 
 # Dispatching Parallel Agents
@@ -10,6 +10,25 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+
+## Model Assignment
+
+Select the model for each agent based on the task type:
+
+| Task Type | Model | Rationale |
+|---|---|---|
+| **Implementation / Fix** | `sonnet` | Fast code generation; focused scope means Sonnet handles it well |
+| **Investigation / Debug** | `sonnet` | Most debugging is methodical tracing; Sonnet is sufficient |
+| **Architecture / Analysis** | `opus` | Deep reasoning needed for cross-cutting concerns, subtle design issues |
+| **Review / Audit** | `opus` | Holistic assessment benefits from deeper reasoning |
+
+**Default to `sonnet`** unless the task explicitly requires deep architectural reasoning or cross-system analysis. Most parallel agent work is focused, scoped implementation — Sonnet's sweet spot.
+
+**Quick decision:**
+- "Fix these tests" → `sonnet`
+- "Debug this race condition" → `sonnet`
+- "Analyze why this architecture causes cascading failures" → `opus`
+- "Review this subsystem for security issues" → `opus`
 
 ## When to Use
 
@@ -56,6 +75,7 @@ Each domain is independent - fixing tool approval doesn't affect abort tests.
 ### 2. Create Focused Agent Tasks
 
 Each agent gets:
+- **Model:** Selected per task type (see Model Assignment above)
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
 - **Constraints:** Don't change other code
@@ -64,11 +84,19 @@ Each agent gets:
 ### 3. Dispatch in Parallel
 
 ```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+// All implementation/fix tasks → sonnet (fast, focused)
+Task(model: "sonnet", "Fix agent-tool-abort.test.ts failures")
+Task(model: "sonnet", "Fix batch-completion-behavior.test.ts failures")
+Task(model: "sonnet", "Fix tool-approval-race-conditions.test.ts failures")
 // All three run concurrently
+```
+
+```typescript
+// Mixed task types → match model to task
+Task(model: "sonnet", "Fix the failing auth tests")
+Task(model: "opus",   "Analyze why the event system causes memory leaks")
+Task(model: "sonnet", "Fix the broken API endpoint handlers")
+// Different models, still concurrent
 ```
 
 ### 4. Review and Integrate
@@ -121,6 +149,9 @@ Return: Summary of what you found and what you fixed.
 **❌ Vague output:** "Fix it" - you don't know what changed
 **✅ Specific:** "Return summary of root cause and changes"
 
+**❌ All agents on opus:** Wastes cost/time on focused fix tasks
+**✅ Match model to task:** Sonnet for fixes, Opus for analysis
+
 ## When NOT to Use
 
 **Related failures:** Fixing one might fix others - investigate together first
@@ -137,13 +168,13 @@ Return: Summary of what you found and what you fixed.
 - batch-completion-behavior.test.ts: 2 failures (tools not executing)
 - tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
 
-**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
+**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions. All are implementation fixes → use `sonnet`.
 
 **Dispatch:**
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+Agent 1 (sonnet) → Fix agent-tool-abort.test.ts
+Agent 2 (sonnet) → Fix batch-completion-behavior.test.ts
+Agent 3 (sonnet) → Fix tool-approval-race-conditions.test.ts
 ```
 
 **Results:**
@@ -161,6 +192,7 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 2. **Focus** - Each agent has narrow scope, less context to track
 3. **Independence** - Agents don't interfere with each other
 4. **Speed** - 3 problems solved in time of 1
+5. **Cost efficiency** - Sonnet for focused tasks, Opus only when depth is needed
 
 ## Verification
 
