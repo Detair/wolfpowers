@@ -1,44 +1,59 @@
 # Wolfpowers
 
-Wolfpowers is a fork of Superpowers with pinned AI models per task type — Sonnet for fast implementation, Opus for deep code review.
+> **This is a personal testing fork. Not intended for general use.** If you want the real thing, use [superpowers](https://github.com/obra/superpowers).
 
-Wolfpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+A fork of [superpowers](https://github.com/obra/superpowers) by Jesse Vincent, modified to experiment with **model pinning** — assigning specific Claude models (Sonnet or Opus) to specific subagent roles. This exists solely to test whether pinning Sonnet to implementation and Opus to review improves the cost/quality tradeoff.
 
-## How it works
+## What Changed From Superpowers
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do.
+The only substantive change is model assignments in the three skills that dispatch subagents:
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest.
+### subagent-driven-development
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY.
+| Role | Model |
+|---|---|
+| Implementer | `sonnet` |
+| Spec Compliance Reviewer | `sonnet` |
+| Code Quality Reviewer | `opus` |
+| Final Code Reviewer | `opus` |
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+### dispatching-parallel-agents
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Wolfpowers.
+| Task Type | Model |
+|---|---|
+| Implementation / Fix | `sonnet` |
+| Investigation / Debug | `sonnet` |
+| Architecture / Analysis | `opus` |
+| Review / Audit | `opus` |
 
+### requesting-code-review
 
-## Installation
+| Role | Model |
+|---|---|
+| Code Reviewer | `opus` |
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+The rationale: Sonnet is fast and cheap for focused code generation. Opus catches subtle issues that matter most during review. TDD and two-stage review already provide quality gates, so the implementer doesn't need to be the most expensive model.
 
+### Namespace
 
-### Claude Code (via Plugin Marketplace)
+All `superpowers:` skill references are renamed to `wolfpowers:` so the two plugins don't conflict.
 
-In Claude Code, register the marketplace first:
+## Quick Install
+
+Paste this into Claude Code:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.codex/INSTALL.md
+```
+
+### Alternative: Plugin Marketplace
 
 ```bash
 /plugin marketplace add detair/wolfpowers-marketplace
-```
-
-Then install the plugin from this marketplace:
-
-```bash
 /plugin install wolfpowers@wolfpowers-marketplace
 ```
 
-### Cursor (via Plugin Marketplace)
-
-In Cursor Agent chat, install from marketplace:
+### Cursor
 
 ```text
 /plugin-add wolfpowers
@@ -46,109 +61,38 @@ In Cursor Agent chat, install from marketplace:
 
 ### Codex
 
-Tell Codex:
-
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
-
 ### OpenCode
-
-Tell OpenCode:
 
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+## How Superpowers Works
 
-### Verify Installation
+For full documentation on the workflow, skills, and philosophy, see the [superpowers README](https://github.com/obra/superpowers#readme) and [Jesse's blog post](https://blog.fsck.com/2025/10/09/superpowers/).
 
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant wolfpowers skill.
+The short version: superpowers is a skills-based workflow system that enforces brainstorming before coding, TDD, systematic debugging, subagent-driven development with two-stage review, and git worktree isolation. Skills activate automatically — you don't invoke them manually.
 
-## The Basic Workflow
+## Keeping Up With Superpowers
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
-
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
-
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
-
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
-
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
-
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-## What's Inside
-
-### Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
-
-**Collaboration**
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-wolfpowers** - Introduction to the skills system
-
-## Philosophy
-
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
-
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
-
-## Contributing
-
-Skills live directly in this repository. To contribute:
-
-1. Fork the repository
-2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Skills update automatically when you update the plugin:
+This fork tracks superpowers upstream. To pull in new superpowers releases:
 
 ```bash
-/plugin update wolfpowers
+git remote add upstream https://github.com/obra/superpowers.git
+git fetch upstream
+git merge upstream/main
 ```
 
-## Credits
-
-Wolfpowers is a fork of [superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The original project provides the foundational workflow and skills system that wolfpowers builds upon.
+Then re-apply the model pinning and namespace changes if needed.
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see LICENSE file for details.
 
-## Support
+## Credits
 
-- **Issues**: https://github.com/detair/wolfpowers/issues
-- **Marketplace**: https://github.com/detair/wolfpowers-marketplace
+All credit for the skills system, workflow design, and philosophy goes to [Jesse Vincent](https://github.com/obra) and the superpowers contributors. This fork only adds model pinning on top.
