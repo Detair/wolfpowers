@@ -1,6 +1,6 @@
 {
-  "name": "wolfpowers-dev",
-  "description": "Development marketplace for Wolfpowers model-optimized skills library",
+  "name": "wolfpowers",
+  "description": "Wolfpowers model-optimized skills library",
   "owner": {
     "name": "detair"
   },

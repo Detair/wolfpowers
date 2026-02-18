@@ -38,38 +38,41 @@ The rationale: Sonnet is fast and cheap for focused code generation. Opus catche
 
 All `superpowers:` skill references are renamed to `wolfpowers:` so the two plugins don't conflict.
 
-## Quick Install
+## Quick Install (Claude Code)
 
 Paste this into Claude Code:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.claude-code/INSTALL.md
 ```
 
-### Alternative: Plugin Marketplace
+Or run the commands yourself:
 
-```bash
-/plugin marketplace add detair/wolfpowers-marketplace
-/plugin install wolfpowers@wolfpowers-marketplace
+```
+/plugin marketplace add detair/wolfpowers
+/plugin install wolfpowers@wolfpowers
 ```
 
-### Cursor
+### Other Platforms
 
+<details>
+<summary>Cursor, Codex, OpenCode</summary>
+
+**Cursor:**
 ```text
 /plugin-add wolfpowers
 ```
 
-### Codex
-
+**Codex:**
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
-### OpenCode
-
+**OpenCode:**
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/detair/wolfpowers/refs/heads/main/.opencode/INSTALL.md
 ```
+</details>
 
 ## How Superpowers Works
 

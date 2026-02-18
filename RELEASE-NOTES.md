@@ -1,4 +1,30 @@
-# Superpowers Release Notes
+# Wolfpowers Release Notes
+
+## Wolfpowers v1.0.1 (2026-02-18)
+
+### Changed
+
+**README rewritten to reflect fork status**
+
+Replaced the superpowers-derived README with a concise version that makes clear this is a personal testing fork for model pinning. Adds a copyable quick-install prompt for Claude Code, documents only what changed from superpowers (model assignment tables, namespace rename), and links back to superpowers for everything else.
+
+## Wolfpowers v1.0.0 (2026-02-17)
+
+### New
+
+**Forked from superpowers v4.3.0 with model pinning**
+
+Pinned specific Claude models to subagent roles across three skills:
+
+- **subagent-driven-development** — Sonnet for implementer and spec review, Opus for code quality and final review
+- **dispatching-parallel-agents** — Sonnet for implementation/debug, Opus for architecture/audit
+- **requesting-code-review** — Opus for all code review
+
+Renamed all `superpowers:` references to `wolfpowers:` for namespace independence.
+
+---
+
+# Superpowers Release Notes (upstream)
 
 ## v4.3.0 (2026-02-12)
 
